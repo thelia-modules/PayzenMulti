@@ -1,0 +1,12 @@
+{
+    "name": "thelia/payzen-multi-module",
+    "license": "LGPL-3.0+",
+    "type": "thelia-module",
+    "require": {
+        "thelia/installer": "~1.1",
+        "thelia/payzen-module": "~1.0"
+    },
+    "extra": {
+        "installer-name": "PayzenMulti"
+    }
+}
