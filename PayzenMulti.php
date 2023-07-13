@@ -15,6 +15,8 @@ namespace PayzenMulti;
 use Payzen\Model\PayzenConfigQuery;
 use Payzen\Payzen;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Propel\Runtime\Exception\PropelException;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Thelia\Core\HttpFoundation\Response;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Order;
@@ -23,7 +25,7 @@ class PayzenMulti extends Payzen
 {
     const MODULE_DOMAIN = "payzenmulti";
 
-    public function postActivation(ConnectionInterface $con = null)
+    public function postActivation(ConnectionInterface $con = null): void
     {
         //Declare postActivation for inherit from Payzen and don't clear payzen data on activation
     }
@@ -31,7 +33,7 @@ class PayzenMulti extends Payzen
     /**
      * @return boolean true to allow usage of this payment module, false otherwise.
      */
-    public function isValidPayment()
+    public function isValidPayment(): bool
     {
         $valid = false;
 
@@ -64,7 +66,7 @@ class PayzenMulti extends Payzen
         return $valid;
     }
 
-    public function getLabel()
+    public function getLabel(): string
     {
         $count    = PayzenConfigQuery::read('multi_number_of_payments', 4);
         return Translator::getInstance()->trans("Pay with Payzen in '%s' times", ['%s' => $count], PayzenMulti::MODULE_DOMAIN);
@@ -81,10 +83,11 @@ class PayzenMulti extends Payzen
      *  On your response you can return this form already
      *  completed, ready to be sent
      *
-     * @param  Order $order processed order
+     * @param Order $order processed order
      * @return Response the HTTP response
+     * @throws PropelException
      */
-    public function pay(Order $order)
+    public function pay(Order $order): Response
     {
         return $this->doPay($order, 'MULTI');
     }
@@ -95,7 +98,7 @@ class PayzenMulti extends Payzen
      *
      * @return bool true if the current order total is within the min and max limits
      */
-    protected function checkMinMaxAmount()
+    protected function checkMinMaxAmount(): bool
     {
         // Check if total order amount is in the module's limits
         $order_total = $this->getCurrentOrderTotalAmount();
@@ -106,5 +109,13 @@ class PayzenMulti extends Payzen
         return $order_total > 0 &&
         ($min_amount <= 0 || $order_total >= $min_amount) &&
         ($max_amount <= 0 || $order_total <= $max_amount);
+    }
+
+    public static function configureServices(ServicesConfigurator $servicesConfigurator): void
+    {
+        $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
+            ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
+            ->autowire(true)
+            ->autoconfigure(true);
     }
 }
