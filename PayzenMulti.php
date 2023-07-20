@@ -115,7 +115,7 @@ class PayzenMulti extends Payzen
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
             ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
-            ->autowire(true)
-            ->autoconfigure(true);
+            ->autowire()
+            ->autoconfigure();
     }
 }

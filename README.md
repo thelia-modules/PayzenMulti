@@ -14,7 +14,7 @@ This module offers to your customers the Payzen payment in several times, operat
 Add it in your main thelia composer.json file
 
 ```
-composer require thelia/payzen-multi-module:~1.1
+composer require thelia/payzen-multi-module:~2.0
 ```
 
 ## Usage
