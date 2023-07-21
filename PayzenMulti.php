@@ -14,9 +14,11 @@ namespace PayzenMulti;
 
 use Payzen\Model\PayzenConfigQuery;
 use Payzen\Payzen;
+use PayzenMulti\Event\ValidationPaymentEvent;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
+use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\HttpFoundation\Response;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Order;
@@ -61,6 +63,10 @@ class PayzenMulti extends Payzen
         if ($valid) {
             // Check if total order amount is in the module's limits
             $valid = $this->checkMinMaxAmount();
+        }
+
+        if ($valid) {
+            $this->getDispatcher()->dispatch(new ValidationPaymentEvent(), TheliaEvents::MODULE_PAYMENT_IS_VALID);
         }
 
         return $valid;
