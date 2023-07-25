@@ -66,7 +66,7 @@ class PayzenMulti extends Payzen
         }
 
         if ($valid) {
-            $this->getDispatcher()->dispatch(new ValidationPaymentEvent(), TheliaEvents::MODULE_PAYMENT_IS_VALID);
+            $this->getDispatcher()->dispatch(new ValidationPaymentEvent(), ValidationPaymentEvent::PAYZEN_MULTI_VALIDATION_PAYEMENT);
         }
 
         return $valid;
