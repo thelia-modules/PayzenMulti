@@ -66,7 +66,10 @@ class PayzenMulti extends Payzen
         }
 
         if ($valid) {
-            $this->getDispatcher()->dispatch(new ValidationPaymentEvent(), ValidationPaymentEvent::PAYZEN_MULTI_VALIDATION_PAYEMENT);
+            $validationEvent = new ValidationPaymentEvent();
+            $validationEvent->setValid(true);
+            $this->getDispatcher()->dispatch($validationEvent, ValidationPaymentEvent::PAYZEN_MULTI_VALIDATION_PAYEMENT);
+            $valid = $validationEvent->isValid();
         }
 
         return $valid;
