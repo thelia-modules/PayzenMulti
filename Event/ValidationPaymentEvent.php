@@ -18,8 +18,9 @@ class ValidationPaymentEvent extends ActionEvent
     /**
      * @param bool $valid
      */
-    public function setValid(bool $valid): void
+    public function setValid(bool $valid): static
     {
         $this->valid = $valid;
+        return $this;
     }
 }
