@@ -1,4 +1,6 @@
 <?php
+
 return array(
-    // 'an english string' => 'The displayed english string',
+    // %s is the configured number of instalments (Payzen "multi_number_of_payments").
+    'Pay with Payzen in \'%s\' times' => 'Pay with Payzen in %s instalments',
 );
