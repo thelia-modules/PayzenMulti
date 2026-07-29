@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*************************************************************************************/
 /*      This file is part of the Thelia package.                                     */
 /*                                                                                   */
@@ -18,81 +21,79 @@ use PayzenMulti\Event\ValidationPaymentEvent;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
-use Thelia\Core\Event\TheliaEvents;
-use Thelia\Core\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Response;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Order;
 
+/**
+ * Instalment payment through Payzen, layered on top of the single-payment Payzen module.
+ *
+ * Only what actually differs from Payzen is overridden — the payment mode, the amount limits and
+ * the extra validation event — so the gateway logic lives in exactly one place.
+ *
+ * All configuration lives in Payzen's own screen, under "Multiple times payment": this module
+ * deliberately ships no back-office, no template and no route.
+ *
+ * WARNING — do not use the inherited $this->trans() helper. Payzen::trans() passes
+ * self::MODULE_DOMAIN, and `self::` is not a forwarding call: it always resolves to Payzen's
+ * domain ("payzen"), never to this class's ("payzenmulti"). A string added here and translated
+ * through that helper would be looked up in the wrong domain and silently rendered untranslated.
+ * Call Translator::getInstance()->trans(..., self::MODULE_DOMAIN) directly instead, as
+ * getLabel() does.
+ */
 class PayzenMulti extends Payzen
 {
-    const MODULE_DOMAIN = "payzenmulti";
+    public const MODULE_DOMAIN = 'payzenmulti';
 
-    public function postActivation(ConnectionInterface $con = null): void
+    /**
+     * Intentionally empty: Payzen::postActivation() creates the payzen_config table and seeds
+     * its defaults. Letting it run from here would reset the parent module's configuration
+     * every time this one is activated.
+     */
+    public function postActivation(?ConnectionInterface $con = null): void
     {
-        //Declare postActivation for inherit from Payzen and don't clear payzen data on activation
     }
 
     /**
-     * @return boolean true to allow usage of this payment module, false otherwise.
+     * Intentionally empty, and the counterpart of postActivation() above.
+     *
+     * Payzen::destroy() drops the payzen_config table and deletes Payzen's confirmation message
+     * when $deleteModuleData is true. Inherited as-is, uninstalling THIS module with "delete
+     * module data" would wipe the configuration of Payzen — gateway keys included — while Payzen
+     * itself stays active.
+     *
+     * This module owns no data of its own (no table, no message, no config key: the multi_* keys
+     * live in Payzen's table), so there is nothing legitimate for it to delete.
+     */
+    public function destroy(?ConnectionInterface $con = null, $deleteModuleData = false): void
+    {
+    }
+
+    /**
+     * Adds a project-level veto on top of Payzen's own checks.
+     *
+     * Delegates to the parent rather than repeating its test-mode / allowed-IP logic: that
+     * implementation already calls $this->checkMinMaxAmount(), so the instalment limits below
+     * apply through late static binding. Only the ValidationPaymentEvent is specific to this
+     * module — it lets another module invalidate instalment payment without touching Payzen.
      */
     public function isValidPayment(): bool
     {
-        $valid = false;
-
-        $mode = PayzenConfigQuery::read('mode', false);
-
-        // If we're in test mode, do not display Payzen on the front office, except for allowed IP addresses.
-        if ('TEST' == $mode) {
-
-            $raw_ips = explode("\n", PayzenConfigQuery::read('allowed_ip_list', ''));
-
-            $allowed_client_ips = array();
-
-            foreach ($raw_ips as $ip) {
-                $allowed_client_ips[] = trim($ip);
-            }
-
-            $client_ip = $this->getRequest()->getClientIp();
-
-            $valid = in_array($client_ip, $allowed_client_ips);
-
-        } elseif ('PRODUCTION' == $mode) {
-            $valid = true;
+        if (!parent::isValidPayment()) {
+            return false;
         }
 
-        if ($valid) {
-            // Check if total order amount is in the module's limits
-            $valid = $this->checkMinMaxAmount();
-        }
+        $validationEvent = (new ValidationPaymentEvent())->setValid(true);
 
-        if ($valid) {
-            $validationEvent = (new ValidationPaymentEvent())->setValid(true);
-            $this->getDispatcher()->dispatch($validationEvent, ValidationPaymentEvent::PAYZEN_MULTI_VALIDATION_PAYEMENT);
-            $valid = $validationEvent->isValid();
-        }
+        $this->getDispatcher()->dispatch(
+            $validationEvent,
+            ValidationPaymentEvent::PAYZEN_MULTI_VALIDATION_PAYEMENT
+        );
 
-        return $valid;
-    }
-
-    public function getLabel(): string
-    {
-        $count    = PayzenConfigQuery::read('multi_number_of_payments', 4);
-        return Translator::getInstance()->trans("Pay with Payzen in '%s' times", ['%s' => $count], PayzenMulti::MODULE_DOMAIN);
+        return $validationEvent->isValid();
     }
 
     /**
-     *
-     *  Method used by payment gateway.
-     *
-     *  If this method return a \Thelia\Core\HttpFoundation\Response instance, this response is sent to the
-     *  browser.
-     *
-     *  In many cases, it's necessary to send a form to the payment gateway.
-     *  On your response you can return this form already
-     *  completed, ready to be sent
-     *
-     * @param Order $order processed order
-     * @return Response the HTTP response
      * @throws PropelException
      */
     public function pay(Order $order): Response
@@ -100,30 +101,60 @@ class PayzenMulti extends Payzen
         return $this->doPay($order, 'MULTI');
     }
 
-
     /**
-     * Check if total order amount is in the module's limits
-     *
-     * @return bool true if the current order total is within the min and max limits
+     * Amount limits specific to instalment payments (multi_* configuration keys), replacing the
+     * single-payment limits the parent reads. Called by the parent's isValidPayment().
      */
     protected function checkMinMaxAmount(): bool
     {
-        // Check if total order amount is in the module's limits
-        $order_total = $this->getCurrentOrderTotalAmount();
+        $orderTotal = $this->getCurrentOrderTotalAmount();
 
-        $min_amount = PayzenConfigQuery::read('multi_minimum_amount', 0);
-        $max_amount = PayzenConfigQuery::read('multi_maximum_amount', 0);
+        $minimumAmount = (float) PayzenConfigQuery::read('multi_minimum_amount', '0');
+        $maximumAmount = (float) PayzenConfigQuery::read('multi_maximum_amount', '0');
 
-        return $order_total > 0 &&
-        ($min_amount <= 0 || $order_total >= $min_amount) &&
-        ($max_amount <= 0 || $order_total <= $max_amount);
+        return $orderTotal > 0
+            && ($minimumAmount <= 0 || $orderTotal >= $minimumAmount)
+            && ($maximumAmount <= 0 || $orderTotal <= $maximumAmount);
     }
 
+    /**
+     * Must stay overridden, even though the body mirrors the parent's.
+     *
+     * Payzen::configureServices() is written as
+     * `load(self::getModuleCode().'\\', __DIR__)`. Inherited as-is that breaks: __DIR__ is
+     * resolved where the code is *written* (Payzen's directory) while getModuleCode() uses
+     * static::class and returns "PayzenMulti", so the container scans Payzen's directory
+     * expecting PayzenMulti\* classes and aborts cache warmup with:
+     *
+     *     Expected to find class "PayzenMulti\Controller\ConfigurationController" in file
+     *     ".../modules/Payzen/Controller/ConfigurationController.php"
+     *
+     * Redeclaring it here makes __DIR__ point at this module, which also keeps
+     * auto-discovery working for anything added later (the Event/ directory, a future service).
+     * Excludes use relative paths rather than THELIA_MODULE_DIR, the Thelia 2 idiom.
+     */
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
-            ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
+            ->exclude([__DIR__.'/I18n/*', __DIR__.'/Config/*', __DIR__.'/PayzenMulti.php'])
             ->autowire()
             ->autoconfigure();
+    }
+
+    /**
+     * Human-readable payment label, e.g. "Pay with Payzen in 4 times".
+     *
+     * Belongs to no contract (neither BaseModule nor PaymentModuleInterface declares it) and
+     * nothing in Thelia 3 calls it: the checkout label comes from the module's i18n title, which
+     * PaymentModuleService reads via setLocale()/getTitle(). Kept for any external caller, but
+     * inert on the Thelia 3 front-office — see the Readme.
+     */
+    public function getLabel(): string
+    {
+        return Translator::getInstance()->trans(
+            "Pay with Payzen in '%s' times",
+            ['%s' => PayzenConfigQuery::read('multi_number_of_payments', '4')],
+            self::MODULE_DOMAIN
+        );
     }
 }

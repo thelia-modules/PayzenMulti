@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
+<!--
+    Deliberately empty.
+
+    This module declares no loop, form, command, service or hook: it only overrides the payment
+    mode, the instalment amount limits and the validation event. Everything else, the
+    configuration screen included, belongs to Payzen.
+
+    Nothing needs to be declared here on Thelia 3: loops, forms, hooks and commands are
+    auto-discovered from the directory that PayzenMulti::configureServices() loads.
+-->
 <config xmlns="http://thelia.net/schema/dic/config"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://thelia.net/schema/dic/config http://thelia.net/schema/dic/config/thelia-1.0.xsd">
-
 </config>

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This module owns no table: the instalment settings live in Payzen's payzen_config table.
+
+    The <external-schema> pointing at local/config/schema.xml was dropped — that file does not
+    exist in a standard install, and with no table of our own there is no foreign key to resolve.
+    Activation was verified to succeed without it.
+-->
 <database defaultIdMethod="native" name="TheliaMain"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:noNamespaceSchemaLocation="../../../../core/vendor/propel/propel/resources/xsd/database.xsd" >
-
-    <external-schema filename="local/config/schema.xml" referenceOnly="true" />
+          xsi:noNamespaceSchemaLocation="../../../vendor/propel/propel/resources/xsd/database.xsd" >
 </database>
