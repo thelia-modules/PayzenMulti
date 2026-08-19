@@ -36,8 +36,8 @@ by the customer and the interval between this payment.
 
 ## Thelia 3 support
 
-The module works on Thelia 3, and keeps working on Thelia 2 — no version gate is needed (see
-"Why no isThelia3()" below).
+This branch is the Thelia 3 line of the module; the Thelia 2 line lives on the `thelia2` branch.
+The code carries no version gate of its own — see "Why no isThelia3()" below.
 
 **It could not load at all before 2.1.0.** Payzen had been migrated with native return types
 (`postActivation(): void`, `pay(): Response`, `isValidPayment(): bool`), while this module
