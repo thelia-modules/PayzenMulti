@@ -147,7 +147,9 @@ either edit the module title in the back-office, or add a listener on
 - `module.xml` required `Payzen >=2.O` — the letter O instead of a zero, a constraint no
   version could satisfy; fixed to `>=2.0.0`
 - `module.xml` declares the `module-2_2.xsd` schema and `<thelia>2.5.0</thelia>`
-- Removed the empty skeleton declarations from `config.xml`, `routing.xml` and `schema.xml`
+- Removed the empty skeleton declarations from `config.xml` and `schema.xml`
+- Removed `Config/routing.xml`: the module exposes no route, and on Thelia 3 the mere presence
+  of that file raises a deprecation (module routes are declared with `#[Route]` attributes)
 - `destroy()` overridden empty: uninstalling this module with "delete module data" used to drop
   Payzen's shared `payzen_config` table and its confirmation message, wiping the gateway
   configuration of a module that stays active
