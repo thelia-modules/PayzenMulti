@@ -32,7 +32,7 @@
              Was ">=2.O" (letter O instead of a zero), which no version could ever satisfy. -->
         <module version="&gt;=2.0.0">Payzen</module>
     </required>
-    <thelia>2.5.0</thelia>
+    <thelia>3.0.0</thelia>
     <stability>other</stability>
     <mandatory>0</mandatory>
     <hidden>0</hidden>
