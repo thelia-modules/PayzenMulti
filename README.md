@@ -3,7 +3,7 @@
 This module offers to your customers the Payzen payment in several times, operated by the Lyra
 Networks compagny.
 
-Requires the [Payzen](https://github.com/Thelia-modules/Payzen) module **2.0 or later**: this
+Requires the [Payzen](https://github.com/Thelia-modules/Payzen) module **3.0 or later**: this
 module extends its main class and reuses its configuration, its gateway call and its payment
 form.
 
@@ -19,7 +19,7 @@ form.
 Add it in your main thelia composer.json file
 
 ```
-composer require thelia/payzen-multi-module:~2.0
+composer require thelia/payzen-multi-module:^2.1
 ```
 
 ## Usage
@@ -94,10 +94,11 @@ declares none is legal in PHP, so these signatures satisfy both an untyped and a
 There is no version-specific code to gate.
 
 That said, **the real compatibility boundary is Payzen's, not this module's**. `composer.json`
-requires `thelia/payzen-module: ~2.0`, and it is that version which determines whether the
-pair runs on Thelia 2 or 3. An older Payzen (`~1.x`) would still be satisfied by this module's
-code, but is excluded by the constraint. Loosen it only after checking which Payzen line actually
-supports your target Thelia version.
+requires `thelia/payzen-module: ^3.0`, and it is that version which determines whether the
+pair runs on Thelia 2 or 3: Payzen 3.0 is the Thelia 3 line, Payzen 2.x the Thelia 2 one.
+An older Payzen would still be satisfied by this module's code, but is excluded by the
+constraint. Loosen it only after checking which Payzen line actually supports your target
+Thelia version.
 
 ### Inheriting from another module: two traps
 
@@ -146,7 +147,9 @@ either edit the module title in the back-office, or add a listener on
   instalments
 - `module.xml` required `Payzen >=2.O` — the letter O instead of a zero, a constraint no
   version could satisfy; fixed to `>=2.0.0`
-- `module.xml` declares the `module-2_2.xsd` schema and `<thelia>2.5.0</thelia>`
+- `module.xml` declares the `module-2_2.xsd` schema and `<thelia>3.0.0</thelia>`
+- `composer.json` now requires `thelia/payzen-module: ^3.0`: Payzen released its Thelia 3 line
+  as 3.0.0, which the previous `~2.0` constraint could not resolve
 - Removed the empty skeleton declarations from `config.xml` and `schema.xml`
 - Removed `Config/routing.xml`: the module exposes no route, and on Thelia 3 the mere presence
   of that file raises a deprecation (module routes are declared with `#[Route]` attributes)
