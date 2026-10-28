@@ -56,7 +56,7 @@ final class BalanceChargingTest extends IntegrationTestCase
     {
         $fields = $this->parameters($this->orderOf100WithAPartOf30());
 
-        self::assertSame(7000, $fields['vads_amount']->getValue());
+        self::assertSame('7000', (string) $fields['vads_amount']->getValue());
         self::assertSame('MULTI:first=1750;count=4;period=30', $fields['vads_payment_config']->getValue());
     }
 
@@ -64,7 +64,7 @@ final class BalanceChargingTest extends IntegrationTestCase
     {
         $fields = $this->parameters($this->orderOf100());
 
-        self::assertSame(10000, $fields['vads_amount']->getValue());
+        self::assertSame('10000', (string) $fields['vads_amount']->getValue());
         self::assertSame('MULTI:first=2500;count=4;period=30', $fields['vads_payment_config']->getValue());
     }
 
