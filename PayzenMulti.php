@@ -24,6 +24,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurat
 use Symfony\Component\HttpFoundation\Response;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Order;
+use Thelia\Module\BalanceChargingPaymentModuleInterface;
 
 /**
  * Instalment payment through Payzen, layered on top of the single-payment Payzen module.
@@ -40,8 +41,12 @@ use Thelia\Model\Order;
  * through that helper would be looked up in the wrong domain and silently rendered untranslated.
  * Call Translator::getInstance()->trans(..., self::MODULE_DOMAIN) directly instead, as
  * getLabel() does.
+ *
+ * The instalments are cut from getAmountToCharge(): the balance left by the other parts of the order (a gift card, for
+ * one), not the order total. Payzen already declares BalanceChargingPaymentModuleInterface and this class inherits it;
+ * it is restated here because the core tests the module instance for it and a later change of the parent must not drop it.
  */
-class PayzenMulti extends Payzen
+class PayzenMulti extends Payzen implements BalanceChargingPaymentModuleInterface
 {
     public const MODULE_DOMAIN = 'payzenmulti';
 

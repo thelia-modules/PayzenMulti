@@ -18,7 +18,7 @@
         <language>en_US</language>
         <language>fr_FR</language>
     </languages>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
     <authors>
         <author>
             <name>Vincent Lopes-Vicente</name>
@@ -30,9 +30,9 @@
     <required>
         <!-- The parent module this one extends: its signatures and configuration are reused.
              Was ">=2.O" (letter O instead of a zero), which no version could ever satisfy. -->
-        <module version="&gt;=2.0.0">Payzen</module>
+        <module version="&gt;=3.2.0">Payzen</module>
     </required>
-    <thelia>3.0.0</thelia>
+    <thelia>3.3.0</thelia>
     <stability>other</stability>
     <mandatory>0</mandatory>
     <hidden>0</hidden>
