@@ -3,7 +3,7 @@
 This module offers to your customers the Payzen payment in several times, operated by the Lyra
 Networks compagny.
 
-Requires the [Payzen](https://github.com/Thelia-modules/Payzen) module **3.0 or later**: this
+Requires the [Payzen](https://github.com/Thelia-modules/Payzen) module **3.2 or later**: this
 module extends its main class and reuses its configuration, its gateway call and its payment
 form.
 
@@ -19,7 +19,7 @@ form.
 Add it in your main thelia composer.json file
 
 ```
-composer require thelia/payzen-multi-module:^2.1
+composer require thelia/payzen-multi-module:^2.2
 ```
 
 ## Usage

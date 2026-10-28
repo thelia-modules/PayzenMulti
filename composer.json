@@ -4,7 +4,10 @@
     "type": "thelia-module",
     "require": {
         "thelia/installer": "~1.1",
-        "thelia/payzen-module": "^3.0"
+        "thelia/payzen-module": "^3.2"
+    },
+    "conflict": {
+        "thelia/core": "<3.3.0"
     },
     "extra": {
         "installer-name": "PayzenMulti"
